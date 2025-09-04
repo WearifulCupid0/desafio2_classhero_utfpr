@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+// Um modelo de dados para representar um evento
+class Evento {
+  String nome;
+  String data;
+  String local;
+
+  Evento({required this.nome, required this.data, required this.local});
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -10,99 +19,117 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lista de Aprendizado',
+      title: 'Cadastro de Eventos',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const TaskPage(),
+      home: const EventoScreen(),
     );
   }
 }
 
-class TaskPage extends StatefulWidget {
-  const TaskPage({super.key});
+class EventoScreen extends StatefulWidget {
+  const EventoScreen({super.key});
 
   @override
-  State<TaskPage> createState() => _TaskPageState();
+  State<EventoScreen> createState() => _EventoScreenState();
 }
 
-class _TaskPageState extends State<TaskPage> {
-  final List<String> _tasks = ["Estudar Flutter", "Praticar Dart", "Ler documentação"];
-  final TextEditingController _controller = TextEditingController();
+class _EventoScreenState extends State<EventoScreen> {
+  // Controladores para os campos de texto
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _dataController = TextEditingController();
+  final TextEditingController _localController = TextEditingController();
 
-  void _addTask(String task) {
-    if (task.trim().isEmpty) return;
+  // Lista para armazenar os eventos cadastrados
+  final List<Evento> _eventos = [];
+
+  // Método para adicionar um novo evento
+  void _adicionarEvento() {
     setState(() {
-      _tasks.add(task.trim());
+      // Cria um novo objeto Evento com os dados dos controladores
+      final novoEvento = Evento(
+        nome: _nomeController.text,
+        data: _dataController.text,
+        local: _localController.text,
+      );
+
+      // Adiciona o novo evento à lista
+      _eventos.add(novoEvento);
+
+      // Limpa os campos de texto
+      _nomeController.clear();
+      _dataController.clear();
+      _localController.clear();
     });
-    _controller.clear();
   }
 
-  void _showAddTaskDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text("Nova Tarefa"),
-          content: TextField(
-            controller: _controller,
-            decoration: const InputDecoration(
-              hintText: "Digite a tarefa",
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              child: const Text("Cancelar"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _addTask(_controller.text);
-                Navigator.of(ctx).pop();
-              },
-              child: const Text("Adicionar"),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void dispose() {
+    // Libera os controladores quando o widget é descartado
+    _nomeController.dispose();
+    _dataController.dispose();
+    _localController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Minhas Tarefas"),
+        title: const Text('Cadastro de Eventos'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: ListView.builder(
-          itemCount: _tasks.length,
-          itemBuilder: (context, index) {
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // Campos de texto para nome, data e local
+            TextField(
+              controller: _nomeController,
+              decoration: const InputDecoration(labelText: 'Nome do Evento'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _dataController,
+              decoration: const InputDecoration(labelText: 'Data'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _localController,
+              decoration: const InputDecoration(labelText: 'Local'),
+            ),
+            const SizedBox(height: 20),
+            // Botão para adicionar o evento
+            ElevatedButton(
+              onPressed: _adicionarEvento,
+              child: const Text('Adicionar Evento'),
+            ),
+            const SizedBox(height: 30),
+            // Título para a lista de eventos
+            const Text(
+              'Eventos Cadastrados',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            // Lista para exibir os eventos
+            Expanded(
+              child: ListView.builder(
+                itemCount: _eventos.length,
+                itemBuilder: (context, index) {
+                  final evento = _eventos[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    child: ListTile(
+                      title: Text(evento.nome),
+                      subtitle: Text('Data: ${evento.data} - Local: ${evento.local}'),
+                    ),
+                  );
+                },
               ),
-              child: Text(
-                _tasks[index],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            );
-          },
+            ),
+          ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTaskDialog,
-        child: const Icon(Icons.add),
       ),
     );
   }
